@@ -1,93 +1,105 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { View, ViewPropTypes } from 'react-native';
-import { Svg, Path, G } from 'react-native-svg';
+import React from 'react'
+import PropTypes from 'prop-types'
+import { View, Platform, ViewPropTypes } from 'react-native'
+import {
+  Surface,
+  Shape,
+  Path,
+  Group
+} from '../../react-native/Libraries/ART/ReactNativeART'
+import MetricsPath from 'art/metrics/path'
 
-export default class CircularProgress extends React.PureComponent {
-  polarToCartesian(centerX, centerY, radius, angleInDegrees) {
-    var angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
-    return {
-        x: centerX + (radius * Math.cos(angleInRadians)),
-        y: centerY + (radius * Math.sin(angleInRadians))
-    };
+export default class CircularProgress extends React.Component {
+  circlePath(cx, cy, r, startDegree, endDegree) {
+    const p = Path()
+    p.path.push(0, cx + r, cy)
+    p.path.push(
+      4,
+      cx,
+      cy,
+      r,
+      startDegree * Math.PI / 180,
+      endDegree * Math.PI / 180,
+      1
+    )
+    return p
   }
 
-  circlePath(x, y, radius, startAngle, endAngle){
-    var start = this.polarToCartesian(x, y, radius, endAngle * 0.9999);
-    var end = this.polarToCartesian(x, y, radius, startAngle);
-    var largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
-    var d = [
-        'M', start.x, start.y,
-        'A', radius, radius, 0, largeArcFlag, 0, end.x, end.y
-    ];
-    return d.join(' ');
-  }
+  extractFill(fill) {
+    if (fill < 0.01) {
+      return 0
+    } else if (fill > 100) {
+      return 100
+    }
 
-  clampFill = fill => Math.min(100, Math.max(0, fill));
+    return fill
+  }
 
   render() {
     const {
       size,
       width,
-      backgroundWidth,
       tintColor,
       backgroundColor,
       style,
       rotation,
-      lineCap,
-      arcSweepAngle,
-      fill,
-      children,
-    } = this.props;
+      linecap,
+      additionalFillTintColor,
+      children
+    } = this.props
+    const backgroundPath = this.circlePath(
+      size / 2,
+      size / 2,
+      size / 2 - width / 2,
+      0,
+      360 * 0.9999
+    )
 
-    const backgroundPath = this.circlePath(size / 2, size / 2, size / 2 - width / 2, 0, arcSweepAngle);
-    const circlePath = this.circlePath(size / 2, size / 2, size / 2 - width / 2, 0, arcSweepAngle * this.clampFill(fill) / 100);
-    const offset = size - (width * 2);
+    const fill = this.extractFill(this.props.fill)
+    const additionalFill = this.extractFill(this.props.additionalFill)
 
-    const childContainerStyle = {
-      position: 'absolute',
-      left: width,
-      top: width,
-      width: offset,
-      height: offset,
-      borderRadius: offset / 2,
-      alignItems: 'center',
-      justifyContent: 'center'
-    };
+    const circlePath = this.circlePath(
+      size / 2,
+      size / 2,
+      size / 2 - width / 2,
+      0,
+      360 * 0.9999 * fill / 100
+    )
+
+    const additionalFillCirclePath = this.circlePath(
+      size / 2,
+      size / 2,
+      size / 2 - width / 2,
+      0,
+      360 * 0.9999 * additionalFill / 100 + 360 * 0.9999 * fill / 100
+    )
 
     return (
       <View style={style}>
-        <Svg
-          width={size}
-          height={size}
-          style={{ backgroundColor: 'transparent' }}
-        >
-          <G rotation={rotation} originX={size/2} originY={size/2}>
-            { backgroundColor && (
-              <Path
-                d={backgroundPath}
-                stroke={backgroundColor}
-                strokeWidth={backgroundWidth || width}
-                strokeLinecap={lineCap}
-                fill="transparent"
-              />
-            )}
-            <Path
+        <Surface width={size} height={size}>
+          <Group rotation={rotation - 90} originX={size / 2} originY={size / 2}>
+            <Shape
+              d={backgroundPath}
+              stroke={backgroundColor}
+              strokeWidth={width}
+            />
+            <Shape
+              d={additionalFillCirclePath}
+              stroke={additionalFillTintColor}
+              strokeWidth={width}
+              strokeCap={linecap}
+            />
+            <Shape
               d={circlePath}
               stroke={tintColor}
               strokeWidth={width}
-              strokeLinecap={lineCap}
-              fill="transparent"
+              strokeCap={linecap}
             />
-          </G>
-        </Svg>
-        {children && (
-          <View style={childContainerStyle}>
-            {children(fill)}
-          </View>
-        )}
+          </Group>
+        </Surface>
+        {children && children(fill)}
       </View>
-    );
+    )
   }
 }
 
@@ -96,18 +108,17 @@ CircularProgress.propTypes = {
   size: PropTypes.number.isRequired,
   fill: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,
-  backgroundWidth: PropTypes.number,
   tintColor: PropTypes.string,
   backgroundColor: PropTypes.string,
   rotation: PropTypes.number,
-  lineCap: PropTypes.string,
-  arcSweepAngle: PropTypes.number,
-  children: PropTypes.func,
-};
+  linecap: PropTypes.string,
+  children: PropTypes.func
+}
 
 CircularProgress.defaultProps = {
   tintColor: 'black',
+  additionalFillTintColor: 'black',
+  backgroundColor: '#e4e4e4',
   rotation: 90,
-  lineCap: 'butt',
-  arcSweepAngle: 360
-};
+  linecap: 'butt'
+}
