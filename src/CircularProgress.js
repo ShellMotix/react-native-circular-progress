@@ -18,8 +18,8 @@ export default class CircularProgress extends React.Component {
       cx,
       cy,
       r,
-      startDegree * Math.PI / 180,
-      endDegree * Math.PI / 180,
+      (startDegree * Math.PI) / 180,
+      (endDegree * Math.PI) / 180,
       1
     )
     return p
@@ -63,7 +63,7 @@ export default class CircularProgress extends React.Component {
       size / 2,
       size / 2 - width / 2,
       0,
-      360 * 0.9999 * fill / 100
+      (360 * 0.9999 * fill) / 100
     )
 
     const additionalFillCirclePath = this.circlePath(
@@ -71,7 +71,7 @@ export default class CircularProgress extends React.Component {
       size / 2,
       size / 2 - width / 2,
       0,
-      360 * 0.9999 * additionalFill / 100 + 360 * 0.9999 * fill / 100
+      (360 * 0.9999 * additionalFill) / 100 + (360 * 0.9999 * fill) / 100
     )
 
     return (
@@ -112,7 +112,8 @@ CircularProgress.propTypes = {
   backgroundColor: PropTypes.string,
   rotation: PropTypes.number,
   linecap: PropTypes.string,
-  children: PropTypes.func
+  children: PropTypes.func,
+  additionalFill: PropTypes.number
 }
 
 CircularProgress.defaultProps = {
@@ -120,5 +121,6 @@ CircularProgress.defaultProps = {
   additionalFillTintColor: 'black',
   backgroundColor: '#e4e4e4',
   rotation: 90,
-  linecap: 'butt'
+  linecap: 'butt',
+  additionalFill: 0
 }
